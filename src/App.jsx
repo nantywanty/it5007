@@ -57,6 +57,6 @@ class displayHomepage extends React.Component {
   }
 }
 
-const element = <IssueList />;
+const element = <displayHomepage />;
 
 ReactDOM.render(element, document.getElementById('contents'));
