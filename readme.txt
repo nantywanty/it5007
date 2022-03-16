@@ -6,6 +6,6 @@ Commands to run:
 
 git clone https://github.com/nantywanty/it5007.git
 cd it5007
-git checkout origin/tutorial-3
-npx babel src --presets @babel/react --out-dir public
+git checkout origin/tutorial-4
+npm run compile
 npm start
