@@ -1,0 +1,36 @@
+{
+  "name": "it5007",
+  "version": "1.0.0",
+  "description": "Student Details:\r Name: Nant Arunyawongsakorn\r Matric No: A0130493L",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon -w server -e js,graphql server/server.js",
+    "compile": "babel src --out-dir public",
+    "watch": "babel src --out-dir public --watch --verbose",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nantywanty/it5007.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nantywanty/it5007/issues"
+  },
+  "homepage": "https://github.com/nantywanty/it5007#readme",
+  "dependencies": {
+    "apollo-server-express": "^2.3.1",
+    "express": "^4.16.4",
+    "graphql": "^0.13.2",
+    "mongodb": "^3.1.10",
+    "nodemon": "^1.18.9",
+    "react-router-dom": "^4.3.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.2.3",
+    "@babel/preset-react": "^7.0.0"
+  }
+}
