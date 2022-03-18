@@ -1,94 +1,170 @@
 const fs = require('fs');
 const express = require('express');
 const { ApolloServer, UserInputError } = require('apollo-server-express');
-const { GraphQLScalarType } = require('graphql');
 const { Kind } = require('graphql/language');
 const { MongoClient } = require('mongodb');
 
-const url = 'mongodb://localhost/issuetracker';
-
-// Atlas URL  - replace UUU with user, PPP with password, XXX with hostname
-// const url = 'mongodb+srv://UUU:PPP@cluster0-XXX.mongodb.net/issuetracker?retryWrites=true';
-
-// mLab URL - replace UUU with user, PPP with password, XXX with hostname
-// const url = 'mongodb://UUU:PPP@XXX.mlab.com:33533/issuetracker';
-
+const url = 'mongodb://localhost/bookingsys';
 let db;
+let aboutMessage = "SHIRS Booking System API v1.0";
 
-let aboutMessage = "Issue Tracker API v1.0";
-
-const GraphQLDate = new GraphQLScalarType({
-  name: 'GraphQLDate',
-  description: 'A Date() type in GraphQL as a scalar',
-  serialize(value) {
-    return value.toISOString();
-  },
-  parseValue(value) {
-    const dateValue = new Date(value);
-    return isNaN(dateValue) ? undefined : dateValue;
-  },
-  parseLiteral(ast) {
-    if (ast.kind == Kind.STRING) {
-      const value = new Date(ast.value);
-      return isNaN(value) ? undefined : value;
-    }
-  },
-});
-
+// Resolvers
 const resolvers = {
   Query: {
     about: () => aboutMessage,
-    issueList,
+    bookingDetails,
+    blacklistDetails,
+    bookingAddValidate,
+    bookingDeleteValidate,
+    blacklistAddValidate,
+    blacklistDeleteValidate,
+    checkBlacklist,
   },
   Mutation: {
     setAboutMessage,
-    issueAdd,
+    bookingAdd,
+    bookingDelete,
+    blacklistAdd,
+    blacklistDelete,
   },
-  GraphQLDate,
 };
 
 function setAboutMessage(_, { message }) {
   return aboutMessage = message;
 }
 
-async function issueList() {
-  const issues = await db.collection('issues').find({}).toArray();
-  return issues;
+// Query functions
+async function bookingDetails() {
+  const bookings = await db.collection('bookings').find({}).toArray();
+  return bookings;
 }
 
-async function getNextSequence(name) {
-  const result = await db.collection('counters').findOneAndUpdate(
-    { _id: name },
-    { $inc: { current: 1 } },
-    { returnOriginal: false },
-  );
-  return result.value.current;
+async function blacklistDetails() {
+  const blacklist = await db.collection('blacklist').find({}).toArray();
+  return blacklist;
 }
 
-function issueValidate(issue) {
+// Input validation functions
+async function bookingAddValidate(booking) {
   const errors = [];
-  if (issue.title.length < 3) {
-    errors.push('Field "title" must be at least 3 characters long.');
+  const current = await db.collection('bookings').findOne({seat: booking.seat});
+  
+  if (booking.seat < 1 || booking.seat > 25) {
+    errors.push('Please enter a valid seat from 1 to 25.');
+  } else if (current.status == 'Taken') {
+      errors.push('Seat is taken, please select another seat.');
   }
-  if (issue.status === 'Assigned' && !issue.owner) {
-    errors.push('Field "owner" is required when status is "Assigned"');
+  if (booking.name == 0) {
+    errors.push('Please enter a name.');
+  }
+  if (booking.phone == 0 || booking.phone < 0) {
+    errors.push('Please enter a valid phone number.');
   }
   if (errors.length > 0) {
     throw new UserInputError('Invalid input(s)', { errors });
   }
 }
 
-async function issueAdd(_, { issue }) {
-  issueValidate(issue);
-  issue.created = new Date();
-  issue.id = await getNextSequence('issues');
+async function checkBlacklist(person) {
+  const errors = [];
+  const result1 = await db.collection('blacklist').findOne({name: person.name});
+  const result2 = await db.collection('blacklist').findOne({phone: person.phone});
 
-  const result = await db.collection('issues').insertOne(issue);
-  const savedIssue = await db.collection('issues')
-    .findOne({ _id: result.insertedId });
-  return savedIssue;
+  if (result1) {
+    errors.push('Person is on black list.');
+  } 
+  if (result2) {
+    errors.push('Phone number is on black list.');
+  } 
+  if (errors.length > 0) {
+    throw new UserInputError('Invalid input(s)', { errors });
+  }
 }
 
+async function bookingDeleteValidate(booking) {
+  const errors = [];
+  const current = await db.collection('bookings').findOne({seat: booking.seat});
+
+  if (booking.seat < 1 || booking.seat > 25) {
+    errors.push('Please enter a valid seat from 1 to 25.');
+  } else if (current.status == 'Free') {
+    errors.push('Seat is free, please select another seat to delete.');
+  }
+  if (errors.length > 0) {
+    throw new UserInputError('Invalid input(s)', { errors });
+  }
+}
+
+async function blacklistAddValidate(person) {
+  const errors = [];
+  if (person.name == 0) {
+    errors.push('Please enter a name.');
+  }
+  if (person.phone == 0 || person.phone < 0) {
+    errors.push('Please enter a valid phone number.');
+  }
+  if (errors.length > 0) {
+    throw new UserInputError('Invalid input(s)', { errors });
+  }
+}
+
+async function blacklistDeleteValidate(person) {
+  const errors = [];
+  const result = await db.collection('blacklist').findOne({name: person.name});
+  if (person.name == 0) {
+    errors.push('Please enter a name.');
+  } else if (!result) {
+    errors.push('Name not found in black list.');
+  }
+  if (errors.length > 0) {
+    throw new UserInputError('Invalid input(s)', { errors });
+  }
+}
+
+// Mutation functions
+async function bookingAdd(_, { booking }) {
+  await bookingAddValidate(booking);
+  const person = {name: booking.name, phone: booking.phone};
+  await checkBlacklist(person);
+  booking.status = 'Taken';
+  booking.timestamp = new Date();
+
+  const result = await db.collection('bookings').replaceOne(
+    { seat: booking.seat },
+    booking
+  );
+  return;
+}
+
+async function bookingDelete(_, { booking }) {
+  await bookingDeleteValidate(booking);
+  booking.status = 'Free';
+  booking.name = '-';
+  booking.phone = '-';
+  booking.timestamp = '-';
+
+  const result = await db.collection('bookings').replaceOne(
+    { seat: booking.seat },
+    booking
+  );
+  return;
+}
+
+async function blacklistAdd(_, { person }) {
+  await blacklistAddValidate(person);
+
+  const result = await db.collection('blacklist').insertOne(person);
+  return;
+}
+
+async function blacklistDelete(_, { person }) {
+  await blacklistDeleteValidate(person);
+
+  const result = await db.collection('blacklist').deleteMany({name: person.name});
+  return;
+}
+
+// Other functions
 async function connectToDb() {
   const client = new MongoClient(url, { useNewUrlParser: true });
   await client.connect();

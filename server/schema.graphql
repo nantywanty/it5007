@@ -1,41 +1,51 @@
-scalar GraphQLDate
-
 enum StatusType {
-  New
-  Assigned
-  Fixed
-  Closed
+  Free
+  Taken
 }
 
-type Issue {
+type Booking {
   _id: ID!
-  id: Int!
-  title: String!
+  seat: Int!
   status: StatusType!
-  owner: String
-  effort: Int
-  created: GraphQLDate!
-  due: GraphQLDate
+  name: String!
+  phone: String!
+  timestamp: String!
 }
 
-"Toned down Issue, used as inputs, without server generated values."
-input IssueInputs {
-  title: String!
-  "Optional, if not supplied, will be set to 'New'"
-  status: StatusType = New
-  owner: String
-  effort: Int
-  due: GraphQLDate
+type Person {
+  _id: ID!
+  name: String!
+  phone: String!
+}
+
+input BookingInputs {
+  seat: Int!
+  name: String
+  phone: String
+}
+
+input PersonInputs {
+  name: String
+  phone: String
 }
 
 ##### Top level declarations
 
 type Query {
   about: String!
-  issueList: [Issue!]!
+  bookingDetails: [Booking!]!
+  blacklistDetails: [Person!]!
+  bookingAddValidate: Booking!
+  bookingDeleteValidate: Booking!
+  blacklistAddValidate: Person!
+  blacklistDeleteValidate: Person!
+  checkBlacklist: Person!
 }
 
 type Mutation {
   setAboutMessage(message: String!): String
-  issueAdd(issue: IssueInputs!): Issue!
+  bookingAdd(booking: BookingInputs!): Booking
+  bookingDelete(booking: BookingInputs!): Booking
+  blacklistAdd(person: PersonInputs!): Person
+  blacklistDelete(person: PersonInputs!): Person
 }

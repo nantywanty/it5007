@@ -5,82 +5,6 @@ function jsonDateReviver(key, value) {
   return value;
 }
 
-class IssueFilter extends React.Component {
-  render() {
-    return (
-      <div>This is a placeholder for the issue filter.</div>
-    );
-  }
-}
-
-function IssueRow(props) {
-  const issue = props.issue;
-  return (
-    <tr>
-      <td>{issue.id}</td>
-      <td>{issue.status}</td>
-      <td>{issue.owner}</td>
-      <td>{issue.created.toDateString()}</td>
-      <td>{issue.effort}</td>
-      <td>{issue.due ? issue.due.toDateString() : ''}</td>
-      <td>{issue.title}</td>
-    </tr>
-  );
-}
-
-function IssueTable(props) {
-  const issueRows = props.issues.map(issue =>
-    <IssueRow key={issue.id} issue={issue} />
-  );
-
-  return (
-    <table className="bordered-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Status</th>
-          <th>Owner</th>
-          <th>Created</th>
-          <th>Effort</th>
-          <th>Due Date</th>
-          <th>Title</th>
-        </tr>
-      </thead>
-      <tbody>
-        {issueRows}
-      </tbody>
-    </table>
-  );
-}
-
-class IssueAdd extends React.Component {
-  constructor() {
-    super();
-    this.handleSubmit = this.handleSubmit.bind(this);
-  }
-
-  handleSubmit(e) {
-    e.preventDefault();
-    const form = document.forms.issueAdd;
-    const issue = {
-      owner: form.owner.value, title: form.title.value,
-      due: new Date(new Date().getTime() + 1000*60*60*24*10),
-    }
-    this.props.createIssue(issue);
-    form.owner.value = ""; form.title.value = "";
-  }
-
-  render() {
-    return (
-      <form name="issueAdd" onSubmit={this.handleSubmit}>
-        <input type="text" name="owner" placeholder="Owner" />
-        <input type="text" name="title" placeholder="Title" />
-        <button>Add</button>
-      </form>
-    );
-  }
-}
-
 async function graphQLFetch(query, variables = {}) {
   try {
     const response = await fetch('/graphql', {
@@ -106,11 +30,227 @@ async function graphQLFetch(query, variables = {}) {
   }
 }
 
-class IssueList extends React.Component {
+function BookingRow(props) {
+  const booking = props.booking;
+  return (
+    <tr>
+      <td>{booking.seat}</td>
+      <td>{booking.status}</td>
+      <td>{booking.name}</td>
+      <td>{booking.phone}</td>
+      <td>{booking.timestamp.toLocaleString()}</td>
+    </tr>
+  );
+}
+
+function BookingTable(props) {
+  const bookingRows = props.bookings.map(booking =>
+    <BookingRow key={booking.seat} booking={booking} />
+  );
+
+  return (
+    <table className="bordered-table">
+      <thead>
+        <tr>
+          <th>Seat Number</th>
+          <th>Status</th>
+          <th>Name</th>
+          <th>Phone Number</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {bookingRows}
+      </tbody>
+    </table>
+  );
+}
+
+class AddBooking extends React.Component {
   constructor() {
     super();
-    this.state = { issues: [] };
-    this.createIssue = this.createIssue.bind(this);
+    this.handleAdd = this.handleAdd.bind(this);
+  }
+
+  handleAdd(e) {
+    e.preventDefault();
+    const form = document.forms.bookingAdd;
+    const booking = {
+      seat: parseInt(form.seat.value),
+      name: form.name.value, 
+      phone: form.phone.value,
+    }
+    this.props.addBooking(booking);
+    form.seat.value = ""; form.name.value = ""; form.phone.value = "";
+  }
+
+  render() {
+    return (
+      <form name="bookingAdd" onSubmit={this.handleAdd}>
+        <input type="number" name="seat" placeholder="Seat Number" />
+        <input type="text" name="name" placeholder="Name" />
+        <input type="number" name="phone" placeholder="Phone Number" />
+        <button>Add</button>
+      </form>
+    );
+  }
+}
+
+class DeleteBooking extends React.Component {
+  constructor() {
+    super();
+    this.handleDelete = this.handleDelete.bind(this);
+  }
+
+  handleDelete(e) {
+    e.preventDefault();
+    const form = document.forms.bookingDelete;
+    const booking = {
+      seat: parseInt(form.seat.value),
+    }
+    this.props.deleteBooking(booking);
+    form.seat.value = "";
+  }
+
+  render() {
+    return (
+      <form name="bookingDelete" onSubmit={this.handleDelete}>
+        <input type="number" name="seat" placeholder="Seat Number" />
+        <button>Delete</button>
+      </form>
+    );
+  }
+}
+
+function BlacklistRow(props) {
+  const person = props.person;
+  return (
+    <tr>
+      <td>{person.name}</td>
+      <td>{person.phone}</td>
+    </tr>
+  );
+}
+
+function BlacklistTable(props) {
+  const blacklistRows = props.blacklist.map(person =>
+    <BlacklistRow key={person.name} person={person} />
+  );
+
+  return (
+    <table className="bordered-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone Number</th>
+        </tr>
+      </thead>
+      <tbody>
+        {blacklistRows}
+      </tbody>
+    </table>
+  );
+}
+
+class AddBlacklist extends React.Component {
+  constructor() {
+    super();
+    this.handleAdd = this.handleAdd.bind(this);
+  }
+
+  handleAdd(e) {
+    e.preventDefault();
+    const form = document.forms.blacklistAdd;
+    const person = {
+      name: form.name.value, 
+      phone: form.phone.value,
+    }
+    this.props.addBlacklist(person);
+    form.name.value = ""; form.phone.value = "";
+  }
+
+  render() {
+    return (
+      <form name="blacklistAdd" onSubmit={this.handleAdd}>
+        <input type="text" name="name" placeholder="Name" />
+        <input type="number" name="phone" placeholder="Phone Number" />
+        <button>Add</button>
+      </form>
+    );
+  }
+}
+
+class DeleteBlacklist extends React.Component {
+  constructor() {
+    super();
+    this.handleDelete = this.handleDelete.bind(this);
+  }
+
+  handleDelete(e) {
+    e.preventDefault();
+    const form = document.forms.blacklistDelete;
+    const person = {
+      name: form.name.value, 
+    }
+    this.props.deleteBlacklist(person);
+    form.name.value = "";
+  }
+
+  render() {
+    return (
+      <form name="blacklistDelete" onSubmit={this.handleDelete}>
+        <input type="text" name="name" placeholder="Name" />
+        <button>Delete</button>
+      </form>
+    );
+  }
+}
+
+class NavBar extends React.Component {
+  constructor() {
+    super();
+    this.showBooking = this.showBooking.bind(this);
+    this.showBlacklist = this.showBlacklist.bind(this);
+  }
+
+  showBooking(e) {
+    e.preventDefault();
+    this.props.showComponent("Booking");
+  }
+
+  showBlacklist(e) {
+    e.preventDefault();
+    this.props.showComponent("Blacklist");
+  }
+
+  render() {
+    return (
+      <table className="bordered-table">
+      <tbody>
+        <tr>
+          <td><button onClick={this.showBooking}>Bookings</button></td>
+          <td><button onClick={this.showBlacklist}>Blacklist</button></td>
+        </tr>
+      </tbody>
+    </table>
+    );
+  }
+}
+
+class DisplayHomepage extends React.Component {
+  constructor() {
+    super();
+    this.state = { 
+      bookings: [],
+      blacklist: [],
+      showBooking: true,
+      showBlacklist: false,
+    };
+    this.addBooking = this.addBooking.bind(this);
+    this.deleteBooking = this.deleteBooking.bind(this);
+    this.addBlacklist = this.addBlacklist.bind(this);
+    this.deleteBlacklist = this.deleteBlacklist.bind(this);
+    this.showComponent = this.showComponent.bind(this);
   }
 
   componentDidMount() {
@@ -118,46 +258,112 @@ class IssueList extends React.Component {
   }
 
   async loadData() {
-    const query = `query {
-      issueList {
-        id title status owner
-        created effort due
+    const query1 = `query {
+      bookingDetails {
+        seat status name phone timestamp
       }
     }`;
 
-    const data = await graphQLFetch(query);
-    if (data) {
-      this.setState({ issues: data.issueList });
+    const data1 = await graphQLFetch(query1);
+    if (data1) {
+      this.setState({ bookings: data1.bookingDetails });
     }
+
+    const query2 = `query {
+      blacklistDetails {
+        name phone
+      }
+    }`;
+
+    const data2 = await graphQLFetch(query2);
+    if (data2) {
+      this.setState({ blacklist: data2.blacklistDetails });
+    }
+  
   }
 
-  async createIssue(issue) {
-    const query = `mutation issueAdd($issue: IssueInputs!) {
-      issueAdd(issue: $issue) {
-        id
+  async addBooking(booking) {
+    const query = `mutation bookingAdd($booking: BookingInputs!) {
+      bookingAdd(booking: $booking) { 
+        seat 
       }
     }`;
 
-    const data = await graphQLFetch(query, { issue });
-    if (data) {
-      this.loadData();
+    await graphQLFetch(query, { booking });
+    this.loadData();
+  }
+
+  async deleteBooking(booking) {
+    const query = `mutation bookingDelete($booking: BookingInputs!) {
+      bookingDelete(booking: $booking) { 
+        seat 
+      }
+    }`;
+
+    await graphQLFetch(query, { booking });
+    this.loadData();
+    
+  }
+
+  async addBlacklist(person) {
+    const query = `mutation blacklistAdd($person: PersonInputs!) {
+      blacklistAdd(person: $person) { 
+        name 
+      }
+    }`;
+
+    await graphQLFetch(query, { person });
+    this.loadData();
+  }
+
+  async deleteBlacklist(person) {
+    const query = `mutation blacklistDelete($person: PersonInputs!) {
+      blacklistDelete(person: $person) { 
+        name 
+      }
+    }`;
+
+    await graphQLFetch(query, { person });
+    this.loadData();
+  }
+
+  showComponent(comp) {
+    this.setState({
+      showBooking: false,
+      showBlacklist: false,
+    }); 
+    if(comp == "Booking") {
+      this.setState({ showBooking: true }); 
+    }
+    else if(comp == "Blacklist") {
+      this.setState({ showBlacklist: true }); 
     }
   }
 
   render() {
     return (
       <React.Fragment>
-        <h1>Issue Tracker</h1>
-        <IssueFilter />
+        <h1>SHIRS - Singapore High-Speed Intercontinental Railway System</h1>
         <hr />
-        <IssueTable issues={this.state.issues} />
+        <NavBar showComponent={this.showComponent} />
         <hr />
-        <IssueAdd createIssue={this.createIssue} />
+        {this.state.showBooking && <h2>Current Bookings</h2>}
+        {this.state.showBooking && <BookingTable bookings ={this.state.bookings} />}
+        {this.state.showBooking && <h2>New Booking</h2>}
+        {this.state.showBooking && <AddBooking addBooking={this.addBooking} />}
+        {this.state.showBooking && <h2>Delete Booking</h2>}
+        {this.state.showBooking && <DeleteBooking deleteBooking={this.deleteBooking} />}
+        {this.state.showBlacklist && <h2>Current Blacklist</h2>}
+        {this.state.showBlacklist && <BlacklistTable blacklist={this.state.blacklist} />}
+        {this.state.showBlacklist && <h2>Add to Blacklist</h2>}
+        {this.state.showBlacklist && <AddBlacklist addBlacklist={this.addBlacklist} />}
+        {this.state.showBlacklist && <h2>Delete from Blacklist</h2>}
+        {this.state.showBlacklist && <DeleteBlacklist deleteBlacklist={this.deleteBlacklist} />}
       </React.Fragment>
     );
   }
 }
 
-const element = <IssueList />;
+const element = <DisplayHomepage />;
 
 ReactDOM.render(element, document.getElementById('contents'));
