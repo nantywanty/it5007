@@ -69,8 +69,8 @@ async function testWithAsync() {
     // Test read data
     const resultBooking = await bookings.find({seat: 'Test'}).toArray();
     const resultBlacklist = await blacklist.find({name: 'Test'}).toArray();
-    // console.log('Result of find:\n', resultBooking);
-    // console.log('Result of find:\n', resultBlacklist);
+    console.log('Result of find:\n', resultBooking);
+    console.log('Result of find:\n', resultBlacklist);
     console.log('Test read data - complete');
 
     // Test delete data
